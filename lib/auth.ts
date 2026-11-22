@@ -46,7 +46,8 @@ export async function currentUser(): Promise<SessionUser | null> {
     const { payload } = await jwtVerify(token, secret());
     const u = await db.user.findUnique({ where: { id: String(payload.id) } });
     return u ? { id: u.id, email: u.email, name: u.name } : null;
-  } catch {
+  } catch (e) {
+    if (process.env.DEBUG_AUTH) console.error("auth", e);
     return null;
   }
 }

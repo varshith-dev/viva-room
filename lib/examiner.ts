@@ -58,6 +58,9 @@ export async function labelTopics(passages: string[]): Promise<string[]> {
       // keep "General" labels; the app still works without topics
     }
   }
+  // a passage the model skipped usually continues the topic before it
+  for (let i = 0; i < out.length; i++) if (out[i] === "General" && i > 0) out[i] = out[i - 1];
+  for (let i = out.length - 2; i >= 0; i--) if (out[i] === "General") out[i] = out[i + 1];
   return out;
 }
 

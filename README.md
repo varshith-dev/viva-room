@@ -25,9 +25,13 @@ In Indian engineering colleges almost every lab course ends with a viva, and man
 5. **Spaced review.** Every passage keeps a review state. Weak passages become due again within minutes, strong ones in days. The next viva starts with what is due and weakest, and when it re-asks a passage it is told what you missed last time, so it asks about that gap from a new angle.
 6. **Answer script.** At the end you get a printable answer script with red pen marks in the margin, closing remarks, and the topic map on the subject page updates.
 
+![Marked answer with a quote checked against the notes](docs/marked.png)
+
 ![Answer script](docs/report.png)
 
 ## How the AI is used, and how it is kept honest
+
+![How it works](docs/how-it-works.png)
 
 | Step | What the model does | Guard rail in code |
 |---|---|---|
