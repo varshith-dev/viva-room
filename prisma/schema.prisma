@@ -1,0 +1,106 @@
+// PostgreSQL (Neon on Vercel). Only portable types are used, so `npm run demo:sqlite`
+// can run the same models on SQLite for a zero-setup local demo.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  subjects     Subject[]
+  sessions     Session[]
+}
+
+model Subject {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  examDate  DateTime?
+  createdAt DateTime  @default(now())
+  sources   Source[]
+  chunks    Chunk[]
+  sessions  Session[]
+}
+
+// One uploaded file or pasted note.
+model Source {
+  id        String   @id @default(cuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title     String
+  kind      String   // pdf | text
+  pages     Int      @default(1)
+  chars     Int      @default(0)
+  createdAt DateTime @default(now())
+  chunks    Chunk[]
+}
+
+// A passage of notes. Questions are asked from one chunk, and the spaced review state lives here.
+model Chunk {
+  id           String    @id @default(cuid())
+  sourceId     String
+  source       Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  idx          Int
+  page         Int       @default(1)
+  topic        String    @default("General")
+  text         String
+  reviews      Int       @default(0)
+  lastScore    Float?
+  intervalDays Float     @default(0)
+  dueAt        DateTime?
+  turns        Turn[]
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  mode      String    // lab | theory | rapid
+  strictness String   @default("fair") // kind | fair | strict
+  length    Int       @default(5)
+  status    String    @default("live") // live | done
+  score     Float?
+  summary   String?   // JSON from the examiner's closing remarks
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  turns     Turn[]
+}
+
+// One question and its answer. kind main | followup. status queued | asked | graded.
+model Turn {
+  id               String   @id @default(cuid())
+  sessionId        String
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  chunkId          String
+  chunk            Chunk    @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  idx              Int
+  kind             String   @default("main")
+  status           String   @default("asked")
+  question         String
+  answer           String?
+  seconds          Int?
+  spoken           Boolean  @default(false)
+  score            Float?
+  verdict          String?
+  got              String?  // JSON string[]
+  missed           String?  // JSON string[]
+  modelAnswer      String?
+  evidence         String?
+  evidenceVerified Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@index([sessionId, idx])
+}
